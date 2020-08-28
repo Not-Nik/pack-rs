@@ -10,7 +10,7 @@ fn main()
     let mut packet = Packet::new(1);
     packet.write_var_int(42);
 
-    my_stream.write_packet(&packet);
+    my_stream.write_packet(&packet, false);
 }
 ```
 Reading:
@@ -18,6 +18,6 @@ Reading:
 fn main()
 {
     // Define my_stream here
-    let packet = my_stream.read_packet();
+    let packet = my_stream.read_packet(false);
 }
 ```

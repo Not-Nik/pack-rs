@@ -47,7 +47,7 @@ mod tests {
         let mut packet = Packet::new(1);
         packet.write_var_int(42);
 
-        my_stream.write_packet(&packet);
+        my_stream.write_packet(&packet, false);
     }
 
     #[test]
@@ -55,7 +55,7 @@ mod tests {
     {
         let mut my_stream = Stream::new();
 
-        let packet = my_stream.read_packet();
+        let packet = my_stream.read_packet(false);
     }
 }
 
@@ -149,18 +149,6 @@ impl Packet
     pub fn new(id: i32) -> Packet
     {
         Packet { id, data: Stream::new() }
-    }
-
-    pub fn write_over<Writer>(&self, writer: &mut Writer, comp: bool) -> Result<usize>
-        where Writer: PacketWrite
-    {
-        writer.write_packet(self, comp)
-    }
-
-    pub fn read_from<Reader>(mut reader: Reader, comp: bool) -> Result<Packet>
-        where Reader: PacketRead
-    {
-        reader.read_packet(comp)
     }
 }
 
