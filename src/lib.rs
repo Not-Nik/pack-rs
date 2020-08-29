@@ -9,8 +9,7 @@ mod tests {
     use rustvarints::{VarWrite, VarRead};
     use ruststreams::Stream;
 
-    fn test_on_stream(comp: bool)
-    {
+    fn test_on_stream(comp: bool) {
         let mut stream = Stream::new();
 
         let mut pack_in = Packet::new(42);
@@ -28,20 +27,17 @@ mod tests {
     }
 
     #[test]
-    fn test_uncompressed()
-    {
+    fn test_uncompressed() {
         test_on_stream(false);
     }
 
     #[test]
-    fn test_compressed()
-    {
+    fn test_compressed() {
         test_on_stream(true);
     }
 
     #[test]
-    fn readme_write()
-    {
+    fn readme_write() {
         let mut my_stream = Stream::new();
 
         let mut packet = Packet::new(1);
@@ -51,41 +47,56 @@ mod tests {
     }
 
     #[test]
-    fn readme_read()
-    {
+    fn readme_read() {
         let mut my_stream = Stream::new();
 
         let packet = my_stream.read_packet(false);
     }
 }
 
-pub struct Packet
-{
+pub struct Packet {
     pub id: i32,
     data: Stream<u8>,
 }
 
-pub trait PacketWrite
-{
+pub trait PacketWrite {
     fn write_packet(&mut self, pack: &Packet, compression: bool) -> Result<usize>;
 }
 
-pub trait PacketRead
-{
+pub trait PacketRead {
     fn read_packet(&mut self, comp: bool) -> Result<Packet>;
 }
 
+impl Packet {
+    pub fn new(id: i32) -> Packet {
+        Packet { id, data: Stream::new() }
+    }
+}
+
+impl Read for Packet {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+        self.data.read(buf)
+    }
+}
+
+impl Write for Packet {
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        self.data.write(buf)
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        self.data.flush()
+    }
+}
+
 impl<T> PacketWrite for T
-    where T: Write
-{
-    fn write_packet(&mut self, pack: &Packet, compression: bool) -> Result<usize>
-    {
+    where T: Write {
+    fn write_packet(&mut self, pack: &Packet, compression: bool) -> Result<usize> {
         let data_length = get_var_int_size(pack.id) + pack.data.as_slice().len();
 
         // TODO: Add results together
 
-        if compression
-        {
+        if compression {
             let mut encoder = Encoder::new(Vec::new()).unwrap();
 
             encoder.write_var_int(pack.id)?;
@@ -109,8 +120,7 @@ impl<T> PacketWrite for T
 }
 
 impl<T> PacketRead for T
-    where T: Read
-{
+    where T: Read {
     fn read_packet(&mut self, comp: bool) -> Result<Packet> {
         let mut res = Packet::new(0);
 
@@ -141,31 +151,5 @@ impl<T> PacketRead for T
         }
 
         Ok(res)
-    }
-}
-
-impl Packet
-{
-    pub fn new(id: i32) -> Packet
-    {
-        Packet { id, data: Stream::new() }
-    }
-}
-
-impl Read for Packet
-{
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
-        self.data.read(buf)
-    }
-}
-
-impl Write for Packet
-{
-    fn write(&mut self, buf: &[u8]) -> Result<usize> {
-        self.data.write(buf)
-    }
-
-    fn flush(&mut self) -> Result<()> {
-        self.data.flush()
     }
 }
