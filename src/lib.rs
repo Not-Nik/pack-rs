@@ -1,13 +1,13 @@
-use std::io::{Write, Result, Read};
-use rustvarints::*;
+use libflate::zlib::{Decoder, Encoder};
 use ruststreams::Stream;
-use libflate::zlib::{Encoder, Decoder};
+use rustvarints::*;
+use std::io::{Read, Result, Write};
 
 #[cfg(test)]
 mod tests {
-    use crate::{Packet, PacketWrite, PacketRead};
-    use rustvarints::{VarWrite, VarRead};
+    use crate::{Packet, PacketRead, PacketWrite};
     use ruststreams::Stream;
+    use rustvarints::{VarRead, VarWrite};
 
     fn test_on_stream(comp: bool) {
         let mut stream = Stream::new();
@@ -69,7 +69,10 @@ pub trait PacketRead {
 
 impl Packet {
     pub fn new(id: i32) -> Packet {
-        Packet { id, data: Stream::new() }
+        Packet {
+            id,
+            data: Stream::new(),
+        }
     }
 }
 
@@ -90,7 +93,9 @@ impl Write for Packet {
 }
 
 impl<T> PacketWrite for T
-    where T: Write {
+where
+    T: Write,
+{
     fn write_packet(&mut self, pack: &Packet, compression: bool) -> Result<usize> {
         let data_length = get_var_int_size(pack.id) + pack.data.as_slice().len();
 
@@ -120,7 +125,9 @@ impl<T> PacketWrite for T
 }
 
 impl<T> PacketRead for T
-    where T: Read {
+where
+    T: Read,
+{
     fn read_packet(&mut self, comp: bool) -> Result<Packet> {
         let mut res = Packet::new(0);
 
