@@ -101,6 +101,8 @@ where
 
         // TODO: Add results together
 
+        let mut buf = Vec::new();
+
         if compression {
             let mut encoder = Encoder::new(Vec::new()).unwrap();
 
@@ -111,14 +113,16 @@ where
 
             let packet_length = get_var_int_size(data_length as i32) + data.len();
 
-            self.write_var_int(packet_length as i32)?;
-            self.write_var_int(data_length as i32)?;
-            self.write(data.as_slice())?;
+            buf.write_var_int(packet_length as i32)?;
+            buf.write_var_int(data_length as i32)?;
+            buf.write(data.as_slice())?;
         } else {
-            self.write_var_int(data_length as i32)?;
-            self.write_var_int(pack.id)?;
-            self.write(pack.data.as_slice())?;
+            buf.write_var_int(data_length as i32)?;
+            buf.write_var_int(pack.id)?;
+            buf.write(pack.data.as_slice())?;
         }
+        self.write_all(buf.as_slice())?;
+
         // TODO: lol wth is this (Add results together)
         Ok(0)
     }
@@ -134,8 +138,6 @@ where
         let packet_length = self.read_var_int()? as usize;
 
         if comp {
-            let _ = self.read_var_int()? as usize;
-
             let mut buf = vec![0; packet_length - get_var_int_size(res.id)];
             self.read(buf.as_mut_slice())?;
 
@@ -152,8 +154,8 @@ where
 
             // TODO: find some way to write to data directly without exposing data
             let mut buf = vec![0; packet_length - get_var_int_size(res.id)];
-            self.read(buf.as_mut_slice())?;
-
+            self.read_exact(buf.as_mut_slice())?;
+            
             res.write(buf.as_slice())?;
         }
 
