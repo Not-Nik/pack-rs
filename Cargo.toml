@@ -7,6 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rustvarints = { git = "https://github.com/GreatGodOfFire/rustvarints" }
+rustvarints = { git = "https://github.com/Not-Nik/rustvarints" }
 ruststreams = { git = "https://github.com/Not-Nik/ruststreams" }
 libflate = "1.0.2"
